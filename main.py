@@ -31,7 +31,6 @@ mydb = client.MercadoLivre
 
 
 def insertVendedor(nome, email):
-    global mydb
     mycol = mydb.vendedor
     mydict = {"nome": nome, "email": email}
     x = mycol.insert_one(mydict)
@@ -259,7 +258,8 @@ def findSortVendedores():
 def findQueryUser(alvo):
     global mydb
     mycol = mydb.usuario
-    myquery = {"nome": {"$eq": alvo}}
+    objInstance = ObjectId(alvo)
+    myquery = {"_id": {"$eq": alvo}}
     mydoc = mycol.find(myquery)
     for result in mydoc:
         print(result)
@@ -277,7 +277,8 @@ def findQueryProduto(alvo):
 def findQueryVendedor(alvo):
     global mydb
     vendedorColumn = mydb.vendedor
-    myquery = {"nome": {"$eq": alvo}}
+    objInstance = ObjectId(alvo)
+    myquery = {"_id": {"$eq": alvo}}
     mydoc = vendedorColumn.find(myquery)
     for result in mydoc:
         print(result)
@@ -312,13 +313,17 @@ def getAlvoRedis(alvo):
     myquery = {"nome": {"$eq": alvo}}
     mydoc = mycol.find(myquery)
     createDic = {}
-    dados = conR.keys()
     usuarios = []
+    dados = conR.keys()
     for result in mydoc:
         createDic.update(result)
         createDic.pop("nome")
         createDic.pop("_id")
-    x = 0
+    if len(createDic["favorito"]) == 0:
+        print()
+    else:
+        for produtoId in createDic["favorito"]:
+                produtoId.pop("_id")
     for usuariosRedis in dados:
         usuarios.append(usuariosRedis.decode())
     user = 'user:' + createDic['email']
@@ -339,14 +344,14 @@ def getAlvoRedis(alvo):
 
 def adicionarFavoritoRedis(alvo, idProduto):
     columnProduto = mydb.produto
-    userFavoritos = json.loads(conR.hget(f'fav:' + alvo, 'favoritos'))
     objInstance = ObjectId(idProduto)
-    arcane = []
     findProdutos = columnProduto.find({"_id": objInstance}, {
         "_id": 0,
         "nome": 1,
         "preco": 1
     })
+    userFavoritos = json.loads(conR.hget(f'fav:' + alvo, 'favoritos'))
+    arcane = []
     for redisFavoritos in userFavoritos:
         arcane.append(redisFavoritos)
     for produto in findProdutos:
