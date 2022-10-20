@@ -319,9 +319,7 @@ def getAlvoRedis(alvo):
         createDic.update(result)
         createDic.pop("nome")
         createDic.pop("_id")
-    if len(createDic["favorito"]) == 0:
-        print()
-    else:
+    if len(createDic["favorito"]) > 0:
         for produtoId in createDic["favorito"]:
                 produtoId.pop("_id")
     for usuariosRedis in dados:
